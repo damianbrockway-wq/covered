@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Covered — homeschool year, documented</title>
+<style>
+  :root{
+    --bg:#0b0c10; --bg2:#0f1116; --surf:#15181f; --surf2:#1b1f29; --line:#262b36;
+    --text:#eef0f4; --muted:#9aa1b1; --accent:#c4f82a; --accent2:#7c5cff; --accent-ink:#0b0c10;
+    --good:#7ee787; --warn:#ffb454; --radius:16px;
+    --paper:#ffffff; --paper-ink:#1c2230; --paper-muted:#5b6472; --paper-line:#e4e8ef;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(124,92,255,.18),transparent 60%),
+               radial-gradient(900px 500px at -10% 10%,rgba(196,248,42,.10),transparent 55%),var(--bg);
+    color:var(--text);font-size:15px;line-height:1.55;min-height:100vh}
+  a{color:var(--accent)}
+  /* top bar */
+  header.bar{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+    background:rgba(11,12,16,.72);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:18px;padding:14px 22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:0;font-weight:800;font-size:23px;letter-spacing:-.5px}
+  .brand .dot{color:var(--accent)}
+  .brand small{font-weight:500;font-size:12px;color:var(--muted);margin-left:12px;letter-spacing:.3px}
+  nav.steps{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  nav.steps button{display:flex;align-items:center;gap:8px;background:transparent;color:var(--muted);
+    border:1px solid transparent;padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600}
+  nav.steps button .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:999px;
+    background:var(--surf2);color:var(--muted);font-size:12px;font-weight:700}
+  nav.steps button:hover{color:var(--text)}
+  nav.steps button.active{background:var(--surf2);color:var(--text);border-color:var(--line)}
+  nav.steps button.active .n{background:var(--accent);color:var(--accent-ink)}
+  main{max-width:980px;margin:30px auto 80px;padding:0 20px}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px;letter-spacing:-.6px;margin:0 0 4px;font-weight:800}
+  .lede{color:var(--muted);margin:0 0 22px;max-width:620px}
+  .card{background:linear-gradient(180deg,var(--surf),var(--bg2));border:1px solid var(--line);
+    border-radius:var(--radius);padding:20px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .card h3{margin:0 0 14px;font-size:15px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:700}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:150px}
+  label{display:block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  input,select,textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;
+    font-size:14px;font-family:inherit;background:var(--bg2);color:var(--text);transition:border .15s,box-shadow .15s}
+  input::placeholder,textarea::placeholder{color:#5d6577}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(196,248,42,.16)}
+  textarea{resize:vertical;min-height:72px;line-height:1.5}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .btn{background:var(--accent);color:var(--accent-ink);border:0;padding:11px 18px;border-radius:11px;cursor:pointer;
+    font-size:14px;font-weight:800;letter-spacing:.2px;transition:transform .08s,filter .15s,box-shadow .15s}
+  .btn:hover{filter:brightness(1.06);box-shadow:0 6px 22px rgba(196,248,42,.28)}
+  .btn:active{transform:translateY(1px)}
+  .btn.alt{background:var(--accent2);color:#fff}
+  .btn.alt:hover{box-shadow:0 6px 22px rgba(124,92,255,.4)}
+  .btn.ghost{background:var(--surf2);color:var(--text);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#222632;box-shadow:none}
+  .btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+  .btn.danger{background:transparent;color:#ff7b72;border:1px solid #3a2630}
+  .btn.danger:hover{background:#2a1b20;box-shadow:none}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .spacer{flex:1}
+  .muted{color:var(--muted)}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .pill.req{background:rgba(124,92,255,.16);color:#c3b4ff}
+  .pill.good{background:rgba(126,231,135,.14);color:var(--good)}
+  .pill.warn{background:rgba(255,180,84,.14);color:var(--warn)}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;margin:0 8px 8px 0}
+  .chip .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .chip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0}
+  .chip button:hover{color:#ff7b72}
+  .empty{color:var(--muted);text-align:center;padding:26px;border:1px dashed var(--line);border-radius:12px;font-size:14px}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .sel-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .sel-tabs button{background:var(--surf2);border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:13px}
+  .sel-tabs button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .subj-block{border:1px solid var(--line);border-radius:13px;padding:15px;margin:12px 0;background:var(--bg2)}
+  .subj-block .hd{display:flex;align-items:center;gap:9px;font-weight:800;margin-bottom:10px;font-size:15px}
+  .savebar{position:sticky;bottom:0;background:linear-gradient(0deg,var(--bg) 40%,transparent);
+    padding:16px 0 6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  /* report paper */
+  .paper-wrap{background:#0a0b0e;border:1px solid var(--line);border-radius:14px;padding:26px;overflow:auto}
+  #paper{background:var(--paper);color:var(--paper-ink);max-width:720px;margin:0 auto;padding:54px 56px;
+    border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-size:13.5px;line-height:1.6}
+  #paper h1{font-size:25px;margin:0 0 2px;letter-spacing:-.4px}
+  #paper .tag{color:var(--paper-muted);font-size:12.5px;margin:0 0 18px}
+  #paper h2{font-size:14px;text-transform:uppercase;letter-spacing:1.2px;color:#3a455a;
+    border-bottom:2px solid var(--paper-line);padding-bottom:6px;margin:26px 0 12px}
+  #paper .kv{display:grid;grid-template-columns:150px 1fr;gap:5px 12px;font-size:13px}
+  #paper .kv b{color:var(--paper-muted);font-weight:600}
+  #paper .subj{margin:0 0 14px}
+  #paper .subj .name{font-weight:700;font-size:14px}
+  #paper .subj .meta{color:var(--paper-muted);font-size:12px;margin-left:6px;font-weight:600}
+  #paper .subj .body{white-space:pre-wrap;margin-top:2px}
+  #paper .subj .mats{color:var(--paper-muted);font-size:12.5px;margin-top:3px}
+  #paper .foot{margin-top:30px;border-top:1px solid var(--paper-line);padding-top:12px;font-size:11px;color:var(--paper-muted)}
+  #paper .pre{white-space:pre-wrap}
+  @media (max-width:560px){ #paper{padding:32px 24px} #paper .kv{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">covered<span class="dot">.</span><small>homeschool year, documented</small></div>
+  <nav class="steps">
+    <button data-view="students" class="active"><span class="n">1</span> Students</button>
+    <button data-view="year"><span class="n">2</span> What you covered</button>
+    <button data-view="report"><span class="n">3</span> Get report</button>
+  </nav>
+</header>
+<main>
+
+<!-- STEP 1: STUDENTS -->
+<section id="view-students" class="view active">
+  <h2 class="title">Set up your family</h2>
+  <p class="lede">A few basics, then add each student and their subjects. Defaults are set for Maine (175 days, 10 required subjects) — change them if you need to.</p>
+
+  <div class="card">
+    <h3>Family &amp; school year</h3>
+    <div class="row">
+      <div><label>Family name</label><input id="setFamily" placeholder="The Brockway Family"></div>
+      <div><label>School year</label><input id="setYear" placeholder="2025–2026"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div><label>State</label><input id="setState" placeholder="Maine"></div>
+      <div style="flex:0 0 220px"><label>Required days / year</label><input type="number" id="setDays" placeholder="175"></div>
+      <div style="flex:0 0 130px;display:flex;align-items:flex-end"><button class="btn ghost" id="maineBtn" type="button">Maine defaults</button></div>
+    </div>
+    <p class="hint">Saved automatically as you type. Everything stays on this computer.</p>
+  </div>
+
+  <div class="card">
+    <h3>Students</h3>
+    <div class="row">
+      <div><label>Name</label><input id="stName" placeholder="Student name"></div>
+      <div style="flex:0 0 120px"><label>Grade</label><input id="stGrade" placeholder="5th"></div>
+      <div style="flex:0 0 170px"><label>Birthdate (opt)</label><input type="date" id="stDob"></div>
+      <div style="flex:0 0 130px;display:flex;align-items:flex-end"><button class="btn" id="stAdd">+ Add</button></div>
+    </div>
+    <div id="studentChips" style="margin-top:16px"></div>
+  </div>
+
+  <div class="card">
+    <h3>Subjects</h3>
+    <div id="subjStudentTabs" class="sel-tabs"></div>
+    <div id="subjArea">
+      <div class="empty">Add a student above to set their subjects.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2: YEAR -->
+<section id="view-year" class="view">
+  <h2 class="title">What did you cover?</h2>
+  <p class="lede">For each subject, jot what you covered, the texts you used, and rough hours. That's it — no daily logging. This becomes the report.</p>
+  <div id="yearStudentTabs" class="sel-tabs"></div>
+  <div id="yearArea"></div>
+</section>
+
+<!-- STEP 3: REPORT -->
+<section id="view-report" class="view">
+  <h2 class="title">Your report</h2>
+  <p class="lede">A clean, evaluator-ready summary. Download it as Word or PDF and send it to your teacher or reviewer.</p>
+  <div id="reportStudentTabs" class="sel-tabs"></div>
+  <div class="toolbar" style="margin-bottom:18px">
+    <button class="btn" id="dlDocx">⬇ Download Word (.docx)</button>
+    <button class="btn alt" id="dlPdf">⬇ Download PDF</button>
+    <button class="btn ghost" id="printBtn">Print</button>
+    <span class="spacer"></span>
+    <button class="btn ghost sm" id="expBtn">Back up data</button>
+    <button class="btn ghost sm" id="impBtn">Restore</button>
+    <input type="file" id="impFile" accept="application/json" style="display:none">
+  </div>
+  <div class="paper-wrap"><div id="paper"></div></div>
+</section>
+
+</main>
+
+<script>
+"use strict";
+/* ============ storage ============ */
+const KEY="covered_app_v1";
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+function blank(){return{
+  settings:{family_name:"",school_year_label:"",state:"Maine",required_days:175},
+  students:[], subjects:[], year:{}
+};}
+let DB=load();
+function load(){try{const r=localStorage.getItem(KEY);const d=r?JSON.parse(r):blank();
+  if(!d.settings)d.settings=blank().settings; if(!d.year)d.year={}; if(!d.subjects)d.subjects=[]; if(!d.students)d.students=[];
+  return d;}catch(e){return blank();}}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));}
+
+let sel={students:null, year:null, report:null}; // selected student per tab
+
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s);
+function el(t,a,...kids){const n=document.createElement(t);a=a||{};
+  for(const k in a){if(k==="class")n.className=a[k];else if(k==="html")n.innerHTML=a[k];else n.setAttribute(k,a[k]);}
+  kids.flat().forEach(c=>n.append(c&&c.nodeType?c:document.createTextNode(c==null?"":c)));return n;}
+function xmlEsc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+const subjFor=sid=>DB.subjects.filter(s=>s.student_id===sid);
+const activeStudents=()=>DB.students;
+function fmtDate(iso){if(!iso)return"";const d=new Date(iso+"T00:00:00");return d.toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"});}
+function yKey(sid){return sid+"|"+(DB.settings.school_year_label||"");}
+function ySum(sid){return DB.year[yKey(sid)]||{total_days:"",general:"",books:"",activities:"",subjects:{}};}
+
+/* ============ nav ============ */
+document.querySelectorAll("nav.steps button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav.steps button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  $("#view-"+b.dataset.view).classList.add("active");
+  renderView(b.dataset.view);
+});
+
+/* ============ settings (autosave) ============ */
+function loadSettings(){const s=DB.settings;$("#setFamily").value=s.family_name||"";$("#setYear").value=s.school_year_label||"";
+  $("#setState").value=s.state||"";$("#setDays").value=s.required_days??"";}
+function bindSettings(){
+  const map={setFamily:"family_name",setYear:"school_year_label",setState:"state",setDays:"required_days"};
+  Object.entries(map).forEach(([id,key])=>{$("#"+id).oninput=()=>{
+    DB.settings[key]= id==="setDays" ? (+$("#"+id).value||0) : $("#"+id).value;
+    save();};});
+}
+$("#maineBtn").onclick=()=>{$("#setState").value="Maine";$("#setDays").value="175";
+  DB.settings.state="Maine";DB.settings.required_days=175;save();};
+
+/* ============ students ============ */
+$("#stAdd").onclick=()=>{
+  const name=$("#stName").value.trim(); if(!name)return alert("Enter a name.");
+  const st={id:uid(),name,grade_level:$("#stGrade").value.trim(),birthdate:$("#stDob").value};
+  DB.students.push(st); save();
+  $("#stName").value="";$("#stGrade").value="";$("#stDob").value="";
+  sel.students=st.id;
+  renderStudents();
+};
+function renderStudentChips(){
+  const box=$("#studentChips"); box.innerHTML="";
+  if(!DB.students.length){box.append(el("div",{class:"empty"},"No students yet — add your first above."));return;}
+  DB.students.forEach(s=>{
+    const x=el("button",{title:"Remove"},"×");
+    x.onclick=()=>{if(confirm("Remove "+s.name+" and their data?")){
+      DB.students=DB.students.filter(z=>z.id!==s.id);
+      DB.subjects=DB.subjects.filter(z=>z.student_id!==s.id);
+      Object.keys(DB.year).forEach(k=>{if(k.startsWith(s.id+"|"))delete DB.year[k];});
+      if(sel.students===s.id)sel.students=null; save(); renderStudents();}};
+    box.append(el("span",{class:"chip"},s.name+(s.grade_level?(" · "+s.grade_level):""),x));
+  });
+}
+function studentTabs(host,which){
+  const box=$(host); box.innerHTML="";
+  if(!DB.students.length){box.append(el("div",{class:"empty",style:"width:100%"},"Add a student in step 1 first."));return false;}
+  if(!sel[which]||!DB.students.some(s=>s.id===sel[which]))sel[which]=DB.students[0].id;
+  DB.students.forEach(s=>{
+    const b=el("button",{class:sel[which]===s.id?"active":""},s.name);
+    b.onclick=()=>{sel[which]=s.id;renderView(which);};
+    box.append(b);
+  });
+  return true;
+}
+
+/* subjects */
+function renderSubjects(){
+  studentTabs("#subjStudentTabs","students");
+  const area=$("#subjArea"); area.innerHTML="";
+  const sid=sel.students;
+  if(!sid){area.append(el("div",{class:"empty"},"Add a student above to set their subjects."));return;}
+  const add=el("div",{class:"row"});
+  const nm=el("input",{id:"subjName",placeholder:"Subject name (e.g. Math)"});
+  const cl=el("input",{type:"color",id:"subjColor",value:"#c4f82a",style:"padding:4px;height:44px"});
+  const btn=el("button",{class:"btn"},"+ Add");
+  const maine=el("button",{class:"btn ghost",type:"button"},"+ Maine required subjects");
+  btn.onclick=()=>{const v=nm.value.trim();if(!v)return alert("Enter a subject name.");
+    DB.subjects.push({id:uid(),student_id:sid,name:v,color:cl.value,required:true});save();renderSubjects();};
+  maine.onclick=()=>{addMaineSubjects(sid);renderSubjects();};
+  add.append(el("div",{},el("label",{},"New subject"),nm),
+             el("div",{style:"flex:0 0 70px"},el("label",{},"Color"),cl),
+             el("div",{style:"flex:0 0 90px;display:flex;align-items:flex-end"},btn));
+  area.append(add, el("div",{style:"margin:12px 0 4px"},maine));
+  const list=subjFor(sid);
+  const chips=el("div",{style:"margin-top:14px"});
+  if(!list.length)chips.append(el("div",{class:"empty"},"No subjects yet. Add your own or tap “Maine required subjects”."));
+  list.forEach(su=>{
+    const x=el("button",{title:"Remove"},"×");
+    x.onclick=()=>{DB.subjects=DB.subjects.filter(z=>z.id!==su.id);save();renderSubjects();};
+    chips.append(el("span",{class:"chip"},el("span",{class:"sw",style:"background:"+(su.color||"#888")}),su.name,x));
+  });
+  area.append(chips);
+}
+function addMaineSubjects(sid){
+  const names=["English & Language Arts","Math","Science","Social Studies","Physical Education","Health Education","Library Skills","Fine Arts","Maine Studies","Computer Proficiency"];
+  const palette=["#c4f82a","#7c5cff","#22d3ee","#ff5ca8","#ffb454","#7ee787","#f97316","#a78bfa","#38bdf8","#f43f5e"];
+  const have=new Set(subjFor(sid).map(s=>s.name.toLowerCase()));
+  names.forEach((n,i)=>{if(!have.has(n.toLowerCase()))DB.subjects.push({id:uid(),student_id:sid,name:n,color:palette[i%palette.length],required:true});});
+  save();
+}
+
+/* ============ year summary ============ */
+function renderYear(){
+  if(!studentTabs("#yearStudentTabs","year")){$("#yearArea").innerHTML="";return;}
+  const sid=sel.year, area=$("#yearArea"); area.innerHTML="";
+  const ys=ySum(sid);
+  const top=el("div",{class:"card"});
+  top.append(el("h3",{},"The year at a glance"));
+  const r=el("div",{class:"row"});
+  const days=el("input",{type:"number",id:"yDays",placeholder:String(DB.settings.required_days||175)}); days.value=ys.total_days||"";
+  const gen=el("textarea",{id:"yGen",placeholder:"A few sentences about the year overall — your approach, highlights, and progress."}); gen.value=ys.general||"";
+  r.append(el("div",{style:"flex:0 0 220px"},el("label",{},"Total days of instruction"),days));
+  top.append(r,el("div",{style:"margin-top:12px"},el("label",{},"Overall summary"),gen));
+  area.append(top);
+
+  const subs=subjFor(sid);
+  const sc=el("div",{class:"card"});
+  sc.append(el("h3",{},"By subject"));
+  if(!subs.length)sc.append(el("div",{class:"empty"},"No subjects for this student yet — add them in step 1."));
+  subs.forEach(su=>{
+    const v=(ys.subjects||{})[su.id]||{};
+    const block=el("div",{class:"subj-block"});
+    block.append(el("div",{class:"hd"},el("span",{class:"sw",style:"width:11px;height:11px;border-radius:3px;background:"+(su.color||"#888")}),su.name));
+    const cov=el("textarea",{"data-cov":su.id,placeholder:"What we covered — e.g. Completed Saxon Math 6/5, lessons 1–120; mastered fractions, decimals, long division."}); cov.value=v.covered||"";
+    block.append(el("div",{},el("label",{},"What we covered"),cov));
+    const r2=el("div",{class:"row",style:"margin-top:10px"});
+    const mat=el("input",{"data-mat":su.id,placeholder:"Texts & materials used (titles)"}); mat.value=v.materials||"";
+    const hrs=el("input",{type:"number","data-hrs":su.id,placeholder:"hrs"}); hrs.value=v.hours||"";
+    r2.append(el("div",{},el("label",{},"Texts & materials"),mat),el("div",{style:"flex:0 0 110px"},el("label",{},"Approx hours"),hrs));
+    block.append(r2);
+    sc.append(block);
+  });
+  area.append(sc);
+
+  const extra=el("div",{class:"card"});
+  extra.append(el("h3",{},"Extras (optional)"));
+  const books=el("textarea",{id:"yBooks",placeholder:"Books read this year — one per line or comma separated."}); books.value=ys.books||"";
+  const acts=el("textarea",{id:"yActs",placeholder:"Field trips, co-ops, and activities."}); acts.value=ys.activities||"";
+  extra.append(el("div",{},el("label",{},"Reading list / books"),books),
+               el("div",{style:"margin-top:12px"},el("label",{},"Field trips & activities"),acts));
+  area.append(extra);
+
+  const bar=el("div",{class:"savebar"});
+  const saveBtn=el("button",{class:"btn"},"Save this year");
+  const hint=el("span",{class:"muted"});
+  saveBtn.onclick=()=>{saveYear(sid);hint.textContent="Saved ✓ — head to step 3 for your report";setTimeout(()=>hint.textContent="",2600);};
+  bar.append(saveBtn,hint);
+  area.append(bar);
+
+  // light autosave on blur
+  area.querySelectorAll("textarea,input").forEach(inp=>inp.addEventListener("change",()=>saveYear(sid)));
+  area.append(el("p",{class:"hint"},"Maine: most families meet the annual assessment by having a Maine-certified teacher review a portfolio — attendance, work samples, and a summary like this. Not legal advice; confirm with your school administrative unit."));
+}
+function saveYear(sid){
+  const area=$("#yearArea");
+  const subjects={};
+  subjFor(sid).forEach(su=>{
+    const cov=area.querySelector('[data-cov="'+su.id+'"]');
+    const mat=area.querySelector('[data-mat="'+su.id+'"]');
+    const hrs=area.querySelector('[data-hrs="'+su.id+'"]');
+    subjects[su.id]={covered:cov?cov.value.trim():"",materials:mat?mat.value.trim():"",hours:hrs?(+hrs.value||0):0};
+  });
+  DB.year[yKey(sid)]={
+    total_days:+($("#yDays")?$("#yDays").value:0)||0,
+    general:$("#yGen")?$("#yGen").value.trim():"",
+    books:$("#yBooks")?$("#yBooks").value.trim():"",
+    activities:$("#yActs")?$("#yActs").value.trim():"",
+    subjects
+  };
+  save();
+}
+
+/* ============ report model ============ */
+function reportData(sid){
+  const s=DB.students.find(x=>x.id===sid); const set=DB.settings; const ys=ySum(sid);
+  const ident=[["Student",s?s.name:"—"],["Grade level",(s&&s.grade_level)||"—"]];
+  if(s&&s.birthdate)ident.push(["Date of birth",fmtDate(s.birthdate)]);
+  ident.push(["Family",set.family_name||"—"],["School year",set.school_year_label||"—"],
+             ["State",set.state||"—"],["Report date",fmtDate(todayISO())]);
+  const subjects=subjFor(sid).map(su=>{const v=(ys.subjects||{})[su.id]||{};
+    return{name:su.name,hours:+v.hours||0,covered:v.covered||"",materials:v.materials||""};});
+  const total=+ys.total_days||0, req=+set.required_days||0;
+  return{
+    title:"Homeschool Year-End Report",
+    studentName:s?s.name:"Student",
+    ident, overview:ys.general||"",
+    subjects,
+    days:{total,req,met:req?total>=req:null},
+    books:ys.books||"", activities:ys.activities||""
+  };
+}
+const DISCLAIMER="This record was prepared by a parent/guardian to document homeschool instruction. Homeschool requirements — including required days, mandatory subjects, recordkeeping, and assessment — vary by state and may change. This document is not legal advice and does not guarantee compliance with any jurisdiction's requirements.";
+
+/* ============ report preview ============ */
+function renderReport(){
+  if(!studentTabs("#reportStudentTabs","report")){$("#paper").innerHTML="<p class='muted'>Add a student to generate a report.</p>";return;}
+  const d=reportData(sel.report);
+  let h="";
+  h+="<h1>"+xmlEsc(d.title)+"</h1>";
+  h+="<p class='tag'>"+xmlEsc(d.studentName)+" · "+xmlEsc(DB.settings.school_year_label||"")+"</p>";
+  h+="<div class='kv'>"+d.ident.map(([k,v])=>"<b>"+xmlEsc(k)+"</b><span>"+xmlEsc(v)+"</span>").join("")+"</div>";
+  if(d.overview){h+="<h2>Overview</h2><div class='pre'>"+xmlEsc(d.overview)+"</div>";}
+  h+="<h2>Subjects &amp; what was covered</h2>";
+  if(d.subjects.length){d.subjects.forEach(su=>{
+    h+="<div class='subj'><span class='name'>"+xmlEsc(su.name)+"</span>"+(su.hours?"<span class='meta'>"+su.hours+" hrs</span>":"")+
+       "<div class='body'>"+(su.covered?xmlEsc(su.covered):"<span style='color:#9aa3b2'>(no summary entered)</span>")+"</div>"+
+       (su.materials?"<div class='mats'>Texts &amp; materials: "+xmlEsc(su.materials)+"</div>":"")+"</div>";
+  });}else h+="<p class='pre'>No subjects recorded.</p>";
+  h+="<h2>Days of instruction</h2><p>"+d.days.total+(d.days.req?(" of "+d.days.req+" required"):"")+
+     (d.days.met===true?" &nbsp;<span style='color:#1a7f3c;font-weight:700'>✓ Met</span>":d.days.met===false?" &nbsp;<span style='color:#b54708;font-weight:700'>In progress</span>":"")+"</p>";
+  if(d.books){h+="<h2>Reading list</h2><div class='pre'>"+xmlEsc(d.books)+"</div>";}
+  if(d.activities){h+="<h2>Field trips &amp; activities</h2><div class='pre'>"+xmlEsc(d.activities)+"</div>";}
+  h+="<div class='foot'>"+xmlEsc(DISCLAIMER)+"</div>";
+  $("#paper").innerHTML=h;
+}
+
+/* ============ shared bytes helpers ============ */
+function strBytes(s){return new TextEncoder().encode(s);}
+function crc32(bytes){let crc=0xFFFFFFFF;for(let i=0;i<bytes.length;i++){crc^=bytes[i];
+  for(let k=0;k<8;k++)crc=(crc>>>1)^(0xEDB88320&-(crc&1));}return (crc^0xFFFFFFFF)>>>0;}
+function zipStore(files){ // files:[{name,data:Uint8Array}]
+  const chunks=[];let offset=0;const central=[];
+  const u16=n=>new Uint8Array([n&255,(n>>8)&255]);
+  const u32=n=>new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]);
+  const push=a=>{chunks.push(a);offset+=a.length;};
+  files.forEach(f=>{const nm=strBytes(f.name);const crc=crc32(f.data);const lho=offset;
+    push(u32(0x04034b50));push(u16(20));push(u16(0));push(u16(0));push(u16(0));push(u16(0));
+    push(u32(crc));push(u32(f.data.length));push(u32(f.data.length));push(u16(nm.length));push(u16(0));
+    push(nm);push(f.data);
+    central.push({nm,crc,size:f.data.length,lho});});
+  const cdStart=offset;
+  central.forEach(c=>{push(u32(0x02014b50));push(u16(20));push(u16(20));push(u16(0));push(u16(0));push(u16(0));push(u16(0));
+    push(u32(c.crc));push(u32(c.size));push(u32(c.size));push(u16(c.nm.length));push(u16(0));push(u16(0));push(u16(0));push(u16(0));push(u32(0));
+    push(u32(c.lho));push(c.nm);});
+  const cdSize=offset-cdStart;
+  push(u32(0x06054b50));push(u16(0));push(u16(0));push(u16(central.length));push(u16(central.length));
+  push(u32(cdSize));push(u32(cdStart));push(u16(0));
+  let total=0;chunks.forEach(c=>total+=c.length);
+  const out=new Uint8Array(total);let p=0;chunks.forEach(c=>{out.set(c,p);p+=c.length;});
+  return out;
+}
+
+/* ============ DOCX ============ */
+function makeDocxBytes(sid){
+  const d=reportData(sid);const E=xmlEsc;const body=[];
+  const run=r=>`<w:r><w:rPr>${r.b?"<w:b/>":""}${r.i?"<w:i/>":""}<w:sz w:val="${r.sz||22}"/><w:szCs w:val="${r.sz||22}"/>${r.c?`<w:color w:val="${r.c}"/>`:""}</w:rPr><w:t xml:space="preserve">${E(r.t)}</w:t></w:r>`;
+  const P=(runs,o)=>{o=o||{};const sp=(o.before!=null||o.after!=null)?`<w:pPr><w:spacing ${o.before!=null?`w:before="${o.before}"`:""} ${o.after!=null?`w:after="${o.after}"`:""}/></w:pPr>`:"";
+    return `<w:p>${sp}${runs.map(run).join("")}</w:p>`;};
+  const H=t=>body.push(P([{t,b:true,sz:26,c:"3A455A"}],{before:240,after:80}));
+  const multi=(txt,o)=>String(txt).split(/\r?\n/).forEach((ln,i)=>body.push(P([{t:ln||" ",sz:22}],i===0?o:{})));
+  body.push(P([{t:d.title,b:true,sz:44}],{after:40}));
+  body.push(P([{t:d.studentName+"  ·  "+(DB.settings.school_year_label||""),sz:22,c:"5B6472"}],{after:160}));
+  d.ident.forEach(([k,v])=>body.push(P([{t:k+": ",b:true,sz:22},{t:v||"—",sz:22}])));
+  if(d.overview){H("Overview");multi(d.overview);}
+  H("Subjects & what was covered");
+  if(d.subjects.length){d.subjects.forEach(su=>{
+    body.push(P([{t:su.name,b:true,sz:24},{t:su.hours?("   "+su.hours+" hrs"):"",sz:20,c:"5B6472"}],{before:120}));
+    multi(su.covered||"(no summary entered)");
+    if(su.materials)body.push(P([{t:"Texts & materials: ",b:true,sz:20,c:"5B6472"},{t:su.materials,sz:20,c:"5B6472"}]));
+  });}else multi("No subjects recorded.");
+  H("Days of instruction");
+  body.push(P([{t:d.days.total+(d.days.req?(" of "+d.days.req+" required"):"")+(d.days.met===true?"  —  Met":d.days.met===false?"  —  In progress":""),sz:22}]));
+  if(d.books){H("Reading list");multi(d.books);}
+  if(d.activities){H("Field trips & activities");multi(d.activities);}
+  body.push(P([{t:DISCLAIMER,i:true,sz:16,c:"7A828F"}],{before:280}));
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  return zipStore([
+    {name:"[Content_Types].xml",data:strBytes(ct)},
+    {name:"_rels/.rels",data:strBytes(rels)},
+    {name:"word/document.xml",data:strBytes(doc)}
+  ]);
+}
+
+/* ============ PDF ============ */
+function pdfClean(s){return String(s==null?"":s)
+  .replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+  .replace(/[–—]/g,"-").replace(/…/g,"...").replace(/•/g,"-")
+  .replace(/[^\x20-\x7E]/g,"");}
+function pdfWidth(t,size,bold){let w=0;for(let i=0;i<t.length;i++){const c=t[i];
+  let u=0.5; if("ilfjtI.,:;'|!".indexOf(c)>=0)u=0.28; else if("mwMW".indexOf(c)>=0)u=0.82; else if(c===" ")u=0.28;
+  else if(c>='A'&&c<='Z')u=0.66; w+=u;} return w*size*(bold?1.06:1);}
+function makePdfBytes(sid){
+  const d=reportData(sid);
+  const lines=[];
+  const add=(t,sz,bold,space)=>lines.push({t:t==null?"":String(t),sz:sz||11,bold:!!bold,space:space||0});
+  const para=(t,sz,bold)=>String(t).split(/\r?\n/).forEach(ln=>add(ln,sz,bold));
+  add(d.title,22,true); add(d.studentName+"  -  "+(DB.settings.school_year_label||""),11,false,4); add("",0,false,8);
+  d.ident.forEach(([k,v])=>add(k+":  "+(v||"-"),11,false));
+  const H=t=>{add("",0,false,12);add(t,14,true,2);};
+  if(d.overview){H("Overview");para(d.overview,11);}
+  H("Subjects & what was covered");
+  if(d.subjects.length){d.subjects.forEach(su=>{add("",0,false,4);
+    add(su.name+(su.hours?("   ("+su.hours+" hrs)"):""),12,true);
+    para(su.covered||"(no summary entered)",11);
+    if(su.materials)add("Texts & materials: "+su.materials,10,false);});}
+  else para("No subjects recorded.",11);
+  H("Days of instruction");
+  add(d.days.total+(d.days.req?(" of "+d.days.req+" required"):"")+(d.days.met===true?"   - Met":d.days.met===false?"   - In progress":""),11,false);
+  if(d.books){H("Reading list");para(d.books,11);}
+  if(d.activities){H("Field trips & activities");para(d.activities,11);}
+  add("",0,false,18); add(DISCLAIMER,8,false);
+  // layout
+  const PW=612,PH=792,MX=56,MY=58,maxw=612-2*56;
+  const pages=[[]];let pi=0;let y=PH-MY;
+  function nl(){pages.push([]);pi++;y=PH-MY;}
+  lines.forEach(ln=>{
+    if(ln.space){y-=ln.space;if(y<MY)nl();}
+    if(!ln.t||ln.sz===0)return;
+    const txt=pdfClean(ln.t);const lh=ln.sz*1.42;
+    const words=txt.split(/\s+/).filter(Boolean);
+    let cur="";
+    const flush=()=>{if(cur!==""){if(y-lh<MY)nl();pages[pi].push({x:MX,y:y-ln.sz,sz:ln.sz,bold:ln.bold,t:cur});y-=lh;cur="";}};
+    if(!words.length){return;}
+    words.forEach(w=>{const test=cur?cur+" "+w:w;
+      if(pdfWidth(test,ln.sz,ln.bold)>maxw&&cur){flush();cur=w;}else cur=test;});
+    flush();
+  });
+  // serialize
+  const esc=s=>s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)");
+  let n=4;const cN=[],pN=[];pages.forEach((_,i)=>{cN[i]=++n;pN[i]=++n;});
+  const parts={};
+  parts[1]="<< /Type /Catalog /Pages 2 0 R >>";
+  parts[2]="<< /Type /Pages /Kids ["+pN.map(p=>p+" 0 R").join(" ")+"] /Count "+pages.length+" >>";
+  parts[3]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+  parts[4]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+  pages.forEach((items,i)=>{let cs="";
+    items.forEach(it=>{cs+="BT /"+(it.bold?"F2":"F1")+" "+it.sz+" Tf "+it.x.toFixed(2)+" "+it.y.toFixed(2)+" Td ("+esc(it.t)+") Tj ET\n";});
+    parts[cN[i]]="<< /Length "+strBytes(cs).length+" >>\nstream\n"+cs+"endstream";
+    parts[pN[i]]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PW+" "+PH+"] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+cN[i]+" 0 R >>";});
+  const count=n;let out="%PDF-1.4\n";const off=[];
+  for(let i=1;i<=count;i++){off[i]=out.length;out+=i+" 0 obj\n"+parts[i]+"\nendobj\n";}
+  const xref=out.length;
+  out+="xref\n0 "+(count+1)+"\n0000000000 65535 f \n";
+  for(let i=1;i<=count;i++)out+=String(off[i]).padStart(10,"0")+" 00000 n \n";
+  out+="trailer\n<< /Size "+(count+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+  return strBytes(out);
+}
+
+/* ============ downloads ============ */
+function dl(name,bytes,mime){
+  const blob=new Blob([bytes],{type:mime});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href);},100);
+}
+function reportFilename(sid,ext){const d=reportData(sid);
+  const base=(d.studentName+"-"+(DB.settings.school_year_label||"year")+"-report").replace(/[^\w\-]+/g,"_");
+  return base+"."+ext;}
+$("#dlDocx").onclick=()=>{if(!sel.report)return alert("Add a student first.");
+  dl(reportFilename(sel.report,"docx"),makeDocxBytes(sel.report),"application/vnd.openxmlformats-officedocument.wordprocessingml.document");};
+$("#dlPdf").onclick=()=>{if(!sel.report)return alert("Add a student first.");
+  dl(reportFilename(sel.report,"pdf"),makePdfBytes(sel.report),"application/pdf");};
+$("#printBtn").onclick=()=>window.print();
+
+/* ============ backup ============ */
+$("#expBtn").onclick=()=>dl("covered-backup-"+todayISO()+".json",strBytes(JSON.stringify(DB,null,2)),"application/json");
+$("#impBtn").onclick=()=>$("#impFile").click();
+$("#impFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.students||!d.settings)throw 0;
+    if(!confirm("Replace all current data with this backup?"))return;
+    DB=Object.assign(blank(),d);if(!DB.year)DB.year={};save();loadSettings();renderAll();alert("Restored.");}
+    catch(err){alert("That file isn't a valid backup.");}};
+  r.readAsText(f);e.target.value="";};
+
+/* ============ render dispatch ============ */
+function renderStudents(){loadSettings();renderStudentChips();renderSubjects();}
+function renderView(v){
+  if(v==="students")renderStudents();
+  else if(v==="year")renderYear();
+  else if(v==="report")renderReport();
+}
+function renderAll(){renderStudents();renderYear();renderReport();}
+
+/* ============ boot ============ */
+bindSettings();
+loadSettings();
+renderStudents();
+
+/* print: only the paper */
+const pstyle=document.createElement("style");
+pstyle.media="print";
+pstyle.textContent="body *{visibility:hidden!important}.paper-wrap,.paper-wrap *{visibility:visible!important}"+
+  ".paper-wrap{position:absolute;inset:0;background:#fff;border:0;padding:0}"+
+  "#paper{box-shadow:none;max-width:none;margin:0;padding:0;color:#1c2230}@page{margin:18mm}";
+document.head.appendChild(pstyle);
+</script>
+</body>
+</html>
