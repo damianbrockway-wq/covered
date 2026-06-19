@@ -103,7 +103,18 @@
   #paper .subj .mats{color:var(--paper-muted);font-size:12.5px;margin-top:3px}
   #paper .foot{margin-top:30px;border-top:1px solid var(--paper-line);padding-top:12px;font-size:11px;color:var(--paper-muted)}
   #paper .pre{white-space:pre-wrap}
-  @media (max-width:560px){ #paper{padding:32px 24px} #paper .kv{grid-template-columns:1fr} }
+  /* device banner + autosave toast */
+  #deviceBanner{display:flex;gap:14px;align-items:center;justify-content:center;text-align:center;
+    background:rgba(124,92,255,.12);border-bottom:1px solid var(--line);color:#cfc6ff;font-size:13px;padding:9px 18px}
+  #deviceBanner b{color:#fff;font-weight:700}
+  #deviceBanner button{background:none;border:0;color:#cfc6ff;font-size:18px;line-height:1;cursor:pointer;padding:0 4px;flex:0 0 auto}
+  #deviceBanner button:hover{color:#fff}
+  #deviceBanner.hide{display:none}
+  #saveToast{position:fixed;right:18px;bottom:18px;z-index:60;background:var(--accent);color:var(--accent-ink);
+    font-weight:800;font-size:13px;padding:9px 15px;border-radius:999px;box-shadow:0 8px 26px rgba(196,248,42,.4);
+    opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+  #saveToast.show{opacity:1;transform:translateY(0) scale(1)}
+  @media (max-width:560px){ #paper{padding:32px 24px} #paper .kv{grid-template-columns:1fr} #deviceBanner{font-size:12px;text-align:left} }
 </style>
 </head>
 <body>
@@ -115,6 +126,10 @@
     <button data-view="report"><span class="n">3</span> Get report</button>
   </nav>
 </header>
+<div id="deviceBanner">
+  <span>🔒 Your records are saved <b>only in this browser, on this device</b> — they don't sync between computers. Use <b>Back up data</b> on step 3 to move or safeguard them.</span>
+  <button id="bannerX" title="Dismiss">×</button>
+</div>
 <main>
 
 <!-- STEP 1: STUDENTS -->
@@ -182,6 +197,7 @@
 </section>
 
 </main>
+<div id="saveToast">✓ Saved</div>
 
 <script>
 "use strict";
@@ -197,7 +213,10 @@ let DB=load();
 function load(){try{const r=localStorage.getItem(KEY);const d=r?JSON.parse(r):blank();
   if(!d.settings)d.settings=blank().settings; if(!d.year)d.year={}; if(!d.subjects)d.subjects=[]; if(!d.students)d.students=[];
   return d;}catch(e){return blank();}}
-function save(){localStorage.setItem(KEY,JSON.stringify(DB));}
+let _saveT;
+function flashSaved(){const t=document.getElementById("saveToast");if(!t)return;
+  t.classList.add("show");clearTimeout(_saveT);_saveT=setTimeout(()=>t.classList.remove("show"),1300);}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));flashSaved();}
 
 let sel={students:null, year:null, report:null}; // selected student per tab
 
@@ -581,6 +600,9 @@ function renderView(v){
 function renderAll(){renderStudents();renderYear();renderReport();}
 
 /* ============ boot ============ */
+const BKEY="covered_hide_banner";
+if(localStorage.getItem(BKEY)==="1"){const b=$("#deviceBanner");if(b)b.classList.add("hide");}
+$("#bannerX").onclick=()=>{$("#deviceBanner").classList.add("hide");localStorage.setItem(BKEY,"1");};
 bindSettings();
 loadSettings();
 renderStudents();
