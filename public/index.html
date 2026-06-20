@@ -25,6 +25,11 @@
   .brand{display:flex;align-items:baseline;gap:0;font-weight:800;font-size:23px;letter-spacing:-.5px}
   .brand .dot{color:var(--accent)}
   .brand small{font-weight:500;font-size:12px;color:var(--muted);margin-left:12px;letter-spacing:.3px}
+  .ddl{display:none;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:700;
+    background:rgba(196,248,42,.13);color:var(--accent);border:1px solid rgba(196,248,42,.3);margin-left:16px}
+  .ddl.show{display:inline-flex}
+  .ddl.warn{background:rgba(255,180,84,.16);color:var(--warn);border-color:rgba(255,180,84,.4)}
+  .ddl.urgent{background:rgba(255,123,114,.16);color:#ff8a80;border-color:rgba(255,123,114,.45)}
   nav.steps{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
   nav.steps button{display:flex;align-items:center;gap:8px;background:transparent;color:var(--muted);
     border:1px solid transparent;padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600}
@@ -120,6 +125,7 @@
 <body>
 <header class="bar">
   <div class="brand">covered<span class="dot">.</span><small>homeschool year, documented</small></div>
+  <span id="deadlineChip" class="ddl"></span>
   <nav class="steps">
     <button data-view="students" class="active"><span class="n">1</span> Students</button>
     <button data-view="year"><span class="n">2</span> What you covered</button>
@@ -148,6 +154,10 @@
       <div style="flex:0 0 220px"><label>Required days / year</label><input type="number" id="setDays" placeholder="175"></div>
       <div style="flex:0 0 130px;display:flex;align-items:flex-end"><button class="btn ghost" id="maineBtn" type="button">Maine defaults</button></div>
     </div>
+    <div class="row" style="margin-top:12px">
+      <div style="flex:0 0 260px"><label>Filing deadline (optional)</label><input type="date" id="setDeadline"></div>
+      <div style="display:flex;align-items:flex-end"><span class="hint" style="margin:0">Set when your assessment is due to your school unit — a countdown shows in the top bar.</span></div>
+    </div>
     <p class="hint">Saved automatically as you type. Everything stays on this computer.</p>
   </div>
 
@@ -174,7 +184,7 @@
 <!-- STEP 2: YEAR -->
 <section id="view-year" class="view">
   <h2 class="title">What did you cover?</h2>
-  <p class="lede">For each subject, jot what you covered, the texts you used, and rough hours. That's it — no daily logging. This becomes the report.</p>
+  <p class="lede">For each subject, jot what you covered and the texts you used. That's it — no daily logging. This becomes the report.</p>
   <div id="yearStudentTabs" class="sel-tabs"></div>
   <div id="yearArea"></div>
 </section>
@@ -193,6 +203,12 @@
     <button class="btn ghost sm" id="impBtn">Restore</button>
     <input type="file" id="impFile" accept="application/json" style="display:none">
   </div>
+  <div class="card" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px"><label>Teacher / reviewer email</label><input id="teacherEmail" type="email" placeholder="reviewer@example.com"></div>
+    <div style="flex:0 0 200px"><label>Teacher name (optional)</label><input id="teacherName" placeholder="Ms. Smith"></div>
+    <button class="btn" id="emailBtn">✉ Email to teacher</button>
+    <p class="hint" style="flex:1 1 100%;margin:0">Download the report first, then this opens a ready-to-send draft in your email app — just attach the file you downloaded and hit send.</p>
+  </div>
   <div class="paper-wrap"><div id="paper"></div></div>
 </section>
 
@@ -206,7 +222,7 @@ const KEY="covered_app_v1";
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function todayISO(){return new Date().toISOString().slice(0,10);}
 function blank(){return{
-  settings:{family_name:"",school_year_label:"",state:"Maine",required_days:175},
+  settings:{family_name:"",school_year_label:"",state:"Maine",required_days:175,filing_deadline:"",teacher_email:"",teacher_name:""},
   students:[], subjects:[], year:{}
 };}
 let DB=load();
@@ -243,12 +259,29 @@ document.querySelectorAll("nav.steps button").forEach(b=>b.onclick=()=>{
 
 /* ============ settings (autosave) ============ */
 function loadSettings(){const s=DB.settings;$("#setFamily").value=s.family_name||"";$("#setYear").value=s.school_year_label||"";
-  $("#setState").value=s.state||"";$("#setDays").value=s.required_days??"";}
+  $("#setState").value=s.state||"";$("#setDays").value=s.required_days??"";$("#setDeadline").value=s.filing_deadline||"";
+  $("#teacherEmail").value=s.teacher_email||"";$("#teacherName").value=s.teacher_name||"";
+  updateDeadlineChip();}
 function bindSettings(){
-  const map={setFamily:"family_name",setYear:"school_year_label",setState:"state",setDays:"required_days"};
+  const map={setFamily:"family_name",setYear:"school_year_label",setState:"state",setDays:"required_days",setDeadline:"filing_deadline",teacherEmail:"teacher_email",teacherName:"teacher_name"};
   Object.entries(map).forEach(([id,key])=>{$("#"+id).oninput=()=>{
     DB.settings[key]= id==="setDays" ? (+$("#"+id).value||0) : $("#"+id).value;
-    save();};});
+    save(); if(id==="setDeadline")updateDeadlineChip();};});
+}
+function updateDeadlineChip(){
+  const c=$("#deadlineChip"); if(!c)return;
+  const d=DB.settings.filing_deadline;
+  if(!d){c.className="ddl";c.textContent="";return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const due=new Date(d+"T00:00:00");
+  const days=Math.round((due-today)/86400000);
+  let cls="ddl show",txt;
+  if(days<0){txt="⚑ Filing overdue ("+(-days)+"d ago)";cls+=" urgent";}
+  else if(days===0){txt="⚑ Filing due today";cls+=" urgent";}
+  else if(days<=3){txt="⚑ Filing due in "+days+" day"+(days===1?"":"s");cls+=" urgent";}
+  else if(days<=14){txt="⏳ Filing due in "+days+" days";cls+=" warn";}
+  else txt="🗓 Filing due in "+days+" days";
+  c.className=cls;c.textContent=txt;
 }
 $("#maineBtn").onclick=()=>{$("#setState").value="Maine";$("#setDays").value="175";
   DB.settings.state="Maine";DB.settings.required_days=175;save();};
@@ -347,11 +380,8 @@ function renderYear(){
     block.append(el("div",{class:"hd"},el("span",{class:"sw",style:"width:11px;height:11px;border-radius:3px;background:"+(su.color||"#888")}),su.name));
     const cov=el("textarea",{"data-cov":su.id,placeholder:"What we covered — e.g. Completed Saxon Math 6/5, lessons 1–120; mastered fractions, decimals, long division."}); cov.value=v.covered||"";
     block.append(el("div",{},el("label",{},"What we covered"),cov));
-    const r2=el("div",{class:"row",style:"margin-top:10px"});
     const mat=el("input",{"data-mat":su.id,placeholder:"Texts & materials used (titles)"}); mat.value=v.materials||"";
-    const hrs=el("input",{type:"number","data-hrs":su.id,placeholder:"hrs"}); hrs.value=v.hours||"";
-    r2.append(el("div",{},el("label",{},"Texts & materials"),mat),el("div",{style:"flex:0 0 110px"},el("label",{},"Approx hours"),hrs));
-    block.append(r2);
+    block.append(el("div",{style:"margin-top:10px"},el("label",{},"Texts & materials"),mat));
     sc.append(block);
   });
   area.append(sc);
@@ -381,8 +411,7 @@ function saveYear(sid){
   subjFor(sid).forEach(su=>{
     const cov=area.querySelector('[data-cov="'+su.id+'"]');
     const mat=area.querySelector('[data-mat="'+su.id+'"]');
-    const hrs=area.querySelector('[data-hrs="'+su.id+'"]');
-    subjects[su.id]={covered:cov?cov.value.trim():"",materials:mat?mat.value.trim():"",hours:hrs?(+hrs.value||0):0};
+    subjects[su.id]={covered:cov?cov.value.trim():"",materials:mat?mat.value.trim():""};
   });
   DB.year[yKey(sid)]={
     total_days:+($("#yDays")?$("#yDays").value:0)||0,
@@ -402,7 +431,7 @@ function reportData(sid){
   ident.push(["Family",set.family_name||"—"],["School year",set.school_year_label||"—"],
              ["State",set.state||"—"],["Report date",fmtDate(todayISO())]);
   const subjects=subjFor(sid).map(su=>{const v=(ys.subjects||{})[su.id]||{};
-    return{name:su.name,hours:+v.hours||0,covered:v.covered||"",materials:v.materials||""};});
+    return{name:su.name,covered:v.covered||"",materials:v.materials||""};});
   const total=+ys.total_days||0, req=+set.required_days||0;
   return{
     title:"Homeschool Year-End Report",
@@ -426,7 +455,7 @@ function renderReport(){
   if(d.overview){h+="<h2>Overview</h2><div class='pre'>"+xmlEsc(d.overview)+"</div>";}
   h+="<h2>Subjects &amp; what was covered</h2>";
   if(d.subjects.length){d.subjects.forEach(su=>{
-    h+="<div class='subj'><span class='name'>"+xmlEsc(su.name)+"</span>"+(su.hours?"<span class='meta'>"+su.hours+" hrs</span>":"")+
+    h+="<div class='subj'><span class='name'>"+xmlEsc(su.name)+"</span>"+
        "<div class='body'>"+(su.covered?xmlEsc(su.covered):"<span style='color:#9aa3b2'>(no summary entered)</span>")+"</div>"+
        (su.materials?"<div class='mats'>Texts &amp; materials: "+xmlEsc(su.materials)+"</div>":"")+"</div>";
   });}else h+="<p class='pre'>No subjects recorded.</p>";
@@ -478,7 +507,7 @@ function makeDocxBytes(sid){
   if(d.overview){H("Overview");multi(d.overview);}
   H("Subjects & what was covered");
   if(d.subjects.length){d.subjects.forEach(su=>{
-    body.push(P([{t:su.name,b:true,sz:24},{t:su.hours?("   "+su.hours+" hrs"):"",sz:20,c:"5B6472"}],{before:120}));
+    body.push(P([{t:su.name,b:true,sz:24}],{before:120}));
     multi(su.covered||"(no summary entered)");
     if(su.materials)body.push(P([{t:"Texts & materials: ",b:true,sz:20,c:"5B6472"},{t:su.materials,sz:20,c:"5B6472"}]));
   });}else multi("No subjects recorded.");
@@ -519,7 +548,7 @@ function makePdfBytes(sid){
   if(d.overview){H("Overview");para(d.overview,11);}
   H("Subjects & what was covered");
   if(d.subjects.length){d.subjects.forEach(su=>{add("",0,false,4);
-    add(su.name+(su.hours?("   ("+su.hours+" hrs)"):""),12,true);
+    add(su.name,12,true);
     para(su.covered||"(no summary entered)",11);
     if(su.materials)add("Texts & materials: "+su.materials,10,false);});}
   else para("No subjects recorded.",11);
@@ -579,6 +608,20 @@ $("#dlDocx").onclick=()=>{if(!sel.report)return alert("Add a student first.");
 $("#dlPdf").onclick=()=>{if(!sel.report)return alert("Add a student first.");
   dl(reportFilename(sel.report,"pdf"),makePdfBytes(sel.report),"application/pdf");};
 $("#printBtn").onclick=()=>window.print();
+$("#emailBtn").onclick=()=>{
+  if(!sel.report)return alert("Add a student first.");
+  const d=reportData(sel.report);
+  const base=reportFilename(sel.report,"pdf").replace(/\.pdf$/,"");
+  if(!confirm("Your email app will open with a ready-to-send message.\n\nMake sure you've clicked Download Word or Download PDF first, then attach that file ("+base+".pdf or .docx) before sending."))return;
+  const yr=DB.settings.school_year_label||"";
+  const subject="Homeschool year-end report — "+d.studentName+(yr?(" ("+yr+")"):"");
+  const greet=DB.settings.teacher_name?("Hi "+DB.settings.teacher_name+","):"Hello,";
+  const body=greet+"\n\nAttached is the homeschool year-end report for "+d.studentName+
+    (yr?(" for the "+yr+" school year"):"")+(DB.settings.state?(" in "+DB.settings.state):"")+
+    ".\n\nPlease let me know if you need anything else for the review.\n\nThank you,\n"+(DB.settings.family_name||"");
+  window.location.href="mailto:"+encodeURIComponent(DB.settings.teacher_email||"")+
+    "?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+};
 
 /* ============ backup ============ */
 $("#expBtn").onclick=()=>dl("covered-backup-"+todayISO()+".json",strBytes(JSON.stringify(DB,null,2)),"application/json");
